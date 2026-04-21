@@ -1,0 +1,63 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Mindful Mind Map</title>
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <main id="app" aria-label="Mind map app">
+      <aside id="sidebar" aria-label="Mind maps list">
+        <div class="sidebar-header">
+          <button id="sidebarToggle" class="icon-button" type="button" aria-label="Collapse mind maps list" title="Collapse list">
+            <span aria-hidden="true">‹</span>
+          </button>
+          <div class="sidebar-title">
+            <strong>Mindful</strong>
+            <span>v0.1</span>
+          </div>
+          <button id="newMapButton" class="icon-button" type="button" aria-label="Create mind map" title="New map">
+            <span aria-hidden="true">+</span>
+          </button>
+        </div>
+        <nav id="mapList" aria-label="Saved mind maps"></nav>
+      </aside>
+
+      <section id="workspace" aria-label="Mind map workspace">
+        <header id="topbar">
+          <button id="sidebarOpen" class="icon-button" type="button" aria-label="Show mind maps list" title="Show list">
+            <span aria-hidden="true">☰</span>
+          </button>
+          <input id="mapTitle" aria-label="Mind map title" />
+          <div id="toolbar" aria-label="Exports and printing">
+            <button id="exportDrawio" class="icon-button" type="button" aria-label="Export Draw.io graph" title="Export .drawio">
+              <span aria-hidden="true">◇</span>
+            </button>
+            <button id="exportHtml" class="icon-button" type="button" aria-label="Export interactive HTML" title="Export HTML">
+              <span aria-hidden="true">⇩</span>
+            </button>
+            <button id="printMap" class="icon-button" type="button" aria-label="Print mind map" title="Print">
+              <span aria-hidden="true">⎙</span>
+            </button>
+          </div>
+        </header>
+        <section id="viewport" aria-label="Scrollable mind map viewport">
+          <div id="board">
+            <svg id="links" aria-hidden="true"></svg>
+            <section id="canvas" aria-label="Mind map canvas"></section>
+          </div>
+        </section>
+        <footer id="shortcuts" aria-label="Keyboard shortcuts">
+          <span><kbd>Tab</kbd> child</span>
+          <span><kbd>Enter</kbd> sibling</span>
+          <span><kbd>←</kbd><kbd>↑</kbd><kbd>↓</kbd><kbd>→</kbd> navigate</span>
+          <span><kbd>Delete</kbd> remove empty node</span>
+          <span>Drop links or files on a node</span>
+          <span>Drag nodes to move</span>
+        </footer>
+      </section>
+    </main>
+    <script src="app.js"></script>
+  </body>
+</html>
