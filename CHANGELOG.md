@@ -13,4 +13,5 @@
 - Added scrollable workspace panning by dragging the empty background.
 - Added image drop support as child image nodes.
 - Added `.drawio`, single-page interactive HTML, and print toolbar actions.
+- Added author information and AI-use disclosure.
 - Added GitHub Pages-ready static app files.

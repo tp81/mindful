@@ -107,6 +107,7 @@ body {
   min-width: var(--sidebar-width);
   padding: 8px;
   overflow: auto;
+  flex: 1 1 auto;
 }
 
 .map-list-item {
@@ -138,6 +139,18 @@ body {
   background: #e4eeee;
   border-color: rgba(38, 50, 56, 0.16);
   font-weight: 700;
+}
+
+#aboutApp {
+  min-width: var(--sidebar-width);
+  padding: 10px 12px 12px;
+  border-top: 1px solid var(--line);
+  color: rgba(38, 50, 56, 0.54);
+  font-family: "Trebuchet MS", Arial, sans-serif;
+  font-size: 11px;
+  line-height: 1.35;
+  display: grid;
+  gap: 3px;
 }
 
 #workspace {

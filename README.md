@@ -2,6 +2,10 @@
 
 Version: `0.1`
 
+Author: Thomas Pengo
+
+Disclosure: AI assistance was used in the creation of this project.
+
 A static browser mind mapping app. It stores maps locally in `localStorage` and runs without a backend, so it can be hosted directly on GitHub Pages.
 
 ## Local Use

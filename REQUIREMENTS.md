@@ -2,6 +2,10 @@
 
 Current version: `0.1`
 
+Author: Thomas Pengo
+
+Disclosure: AI assistance was used in the creation of this project.
+
 ## Overview
 
 Create a client-side JavaScript mind mapping app named Mindful that stores map data in the browser. The app starts with a blank white page containing one editable oval root node centered on the page.
