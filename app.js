@@ -4,8 +4,11 @@
   const STORAGE_KEY = "mindful.mindmaps.v2";
   const LEGACY_STORAGE_KEY = "mindful.mindmap.v1";
   const NODE_WIDTH = 160;
+  const TEXT_NODE_HEIGHT = 76;
+  const IMAGE_NODE_HEIGHT = 150;
   const LEVEL_GAP = 245;
   const SIBLING_GAP = 112;
+  const NODE_MARGIN = 28;
   const PASTELS = [
     "#ffd6d6",
     "#ffe8b8",
@@ -42,7 +45,7 @@
   sidebarOpen.addEventListener("click", () => setSidebarCollapsed(false));
   exportDrawioButton.addEventListener("click", exportDrawio);
   exportHtmlButton.addEventListener("click", exportInteractiveHtml);
-  printMapButton.addEventListener("click", () => window.print());
+  printMapButton.addEventListener("click", printCurrentMap);
   mapTitle.addEventListener("input", () => {
     currentMap().title = mapTitle.value || "Untitled map";
     renderMapList();
@@ -57,6 +60,11 @@
   document.addEventListener("keydown", handleKeydown);
   document.addEventListener("pointermove", handlePointerMove);
   document.addEventListener("pointerup", stopPointerActions);
+  document.addEventListener("pointercancel", stopPointerActions);
+  window.addEventListener("blur", stopPointerActions);
+  document.addEventListener("visibilitychange", () => {
+    if (document.hidden) stopPointerActions();
+  });
   canvas.addEventListener("dragover", handleCanvasDragOver);
   canvas.addEventListener("drop", handleCanvasDrop);
   canvas.addEventListener("dragleave", clearDropTargets);
@@ -382,6 +390,8 @@
 
     const leafCursor = { y: rootY };
     assignTreePositions(map.rootId, levels, leafCursor);
+    resolveLevelOverlaps(levels);
+    recenterParents(map.rootId);
   }
 
   function assignDepths(rootId, depth = 0, levels = {}) {
@@ -405,10 +415,48 @@
         node.y = (Math.min(...childYs) + Math.max(...childYs)) / 2;
       } else if (id !== map.rootId) {
         node.y = leafCursor.y;
-        leafCursor.y += SIBLING_GAP;
+        leafCursor.y += getNodeHeight(node) + NODE_MARGIN;
       }
     }
 
+    return node.y;
+  }
+
+  function resolveLevelOverlaps(levels) {
+    const map = currentMap();
+    const visible = getVisibleNodeIds();
+    const grouped = new Map();
+
+    visible.forEach((id) => {
+      const node = map.nodes[id];
+      if (node.manual) return;
+      const level = levels[id] ?? 0;
+      if (!grouped.has(level)) grouped.set(level, []);
+      grouped.get(level).push(node);
+    });
+
+    grouped.forEach((nodes) => {
+      nodes.sort((a, b) => a.y - b.y);
+      for (let index = 1; index < nodes.length; index += 1) {
+        const prev = nodes[index - 1];
+        const current = nodes[index];
+        const minGap = (getNodeHeight(prev) + getNodeHeight(current)) / 2 + NODE_MARGIN;
+        if (current.y - prev.y < minGap) {
+          current.y = prev.y + minGap;
+        }
+      }
+    });
+  }
+
+  function recenterParents(id) {
+    const map = currentMap();
+    const node = map.nodes[id];
+    if (!node || node.collapsed) return node?.y || 0;
+
+    const childYs = node.children.map((childId) => recenterParents(childId));
+    if (!node.manual && childYs.length) {
+      node.y = (Math.min(...childYs) + Math.max(...childYs)) / 2;
+    }
     return node.y;
   }
 
@@ -550,9 +598,13 @@
   function startDrag(event, id) {
     if (event.target.tagName === "A") return;
     event.stopPropagation();
+    if (event.currentTarget.setPointerCapture) {
+      event.currentTarget.setPointerCapture(event.pointerId);
+    }
     selectNode(id, false);
     drag = {
       id,
+      pointerId: event.pointerId,
       startX: event.clientX,
       startY: event.clientY,
       nodeX: currentMap().nodes[id].x,
@@ -562,6 +614,11 @@
   }
 
   function handlePointerMove(event) {
+    if ((drag || pan) && event.buttons === 0) {
+      stopPointerActions();
+      return;
+    }
+
     if (pan) {
       viewport.scrollLeft = pan.scrollLeft - (event.clientX - pan.startX);
       viewport.scrollTop = pan.scrollTop - (event.clientY - pan.startY);
@@ -592,6 +649,7 @@
   function startPan(event) {
     if (event.target !== viewport && event.target !== board && event.target !== canvas) return;
     pan = {
+      pointerId: event.pointerId,
       startX: event.clientX,
       startY: event.clientY,
       scrollLeft: viewport.scrollLeft,
@@ -783,8 +841,21 @@
 
   function exportInteractiveHtml() {
     const map = currentMap();
+    const html = buildInteractiveHtmlDocument(map, false);
+    downloadFile(`${safeFileName(map.title)}.html`, html, "text/html");
+  }
+
+  function printCurrentMap() {
+    const printWindow = window.open("", "_blank", "noopener,noreferrer");
+    if (!printWindow) return;
+    printWindow.document.open();
+    printWindow.document.write(buildInteractiveHtmlDocument(currentMap(), true));
+    printWindow.document.close();
+  }
+
+  function buildInteractiveHtmlDocument(map, autoPrint) {
     const payload = JSON.stringify(map).replace(/</g, "\\u003c");
-    const html = `<!doctype html>
+    return `<!doctype html>
 <html lang="en">
 <head>
 <meta charset="UTF-8">
@@ -797,6 +868,7 @@ body{margin:0;font-family:"Trebuchet MS",Arial,sans-serif;color:#263238;backgrou
 .image-node{width:220px;min-height:150px;border-radius:28px;gap:8px;flex-direction:column;font-size:15px}
 .image-node img{max-width:196px;max-height:112px;border-radius:16px;object-fit:contain}
 svg{position:absolute;inset:0;width:100%;height:100%;pointer-events:none}.link{fill:none;stroke:rgba(69,90,100,.45);stroke-width:3;stroke-linecap:round}
+ @media print { body{overflow:visible} }
 </style>
 </head>
 <body>
@@ -809,10 +881,10 @@ function visible(id=map.rootId,list=[]){const n=map.nodes[id];if(!n)return list;
 function path(parent,child){const p=document.createElementNS("http://www.w3.org/2000/svg","path");const sx=parent.x+66,ex=child.x-66,mx=(sx+ex)/2;p.setAttribute("class","link");p.setAttribute("d",\`M \${sx} \${parent.y} C \${mx} \${parent.y}, \${mx} \${child.y}, \${ex} \${child.y}\`);links.appendChild(p)}
 const ids=new Set(visible());ids.forEach(id=>{const n=map.nodes[id];if(!n.collapsed)n.children.filter(c=>ids.has(c)).forEach(c=>path(n,map.nodes[c]))});
 ids.forEach(id=>{const n=map.nodes[id];const el=document.createElement("div");el.className="node"+(n.type==="image"?" image-node":"");el.style.left=n.x+"px";el.style.top=n.y+"px";el.style.background=n.color||"#fff6b8";if(n.type==="image"&&n.imageData){const img=document.createElement("img");img.src=n.imageData;img.alt=n.text||"Image";const cap=document.createElement("span");cap.textContent=n.text||"Image";el.append(img,cap)}else if(n.url){const a=document.createElement("a");a.href=n.url;a.target="_blank";a.rel="noreferrer";a.textContent=n.text;el.appendChild(a)}else{el.textContent=n.text}nodes.appendChild(el)});
+${autoPrint ? 'window.addEventListener("load",()=>{window.print();setTimeout(()=>window.close(),300);});' : ""}
 </script>
 </body>
 </html>`;
-    downloadFile(`${safeFileName(map.title)}.html`, html, "text/html");
   }
 
   function downloadFile(fileName, content, type) {
@@ -874,6 +946,10 @@ ids.forEach(id=>{const n=map.nodes[id];const el=document.createElement("div");el
 
   function boardCenterY() {
     return (board?.clientHeight || 1600) / 2;
+  }
+
+  function getNodeHeight(node) {
+    return node?.type === "image" ? IMAGE_NODE_HEIGHT : TEXT_NODE_HEIGHT;
   }
 
   function safeFileName(value) {

@@ -15,3 +15,6 @@
 - Added `.drawio`, single-page interactive HTML, and print toolbar actions.
 - Added author information and AI-use disclosure.
 - Added GitHub Pages-ready static app files.
+- Improved drag stop handling so nodes do not keep moving after pointer release is lost.
+- Improved auto-layout spacing to reduce newly created node overlap within the same level.
+- Changed printing to render through a dedicated printable window instead of the live editor surface.
