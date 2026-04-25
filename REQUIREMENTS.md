@@ -67,6 +67,8 @@ Create a client-side JavaScript mind mapping app named Mindful that stores map d
 - The list behaves similarly to ChatGPT's chats list.
 - Users can create new maps from the list.
 - Users can switch between saved maps.
+- Each map entry includes a delete control.
+- Deleting a map requires confirmation because the change is permanent.
 
 ## Deletion
 
@@ -94,6 +96,7 @@ Create a client-side JavaScript mind mapping app named Mindful that stores map d
 
 ## Export And Print
 
+- Provide an icon button to reset/fix the layout by clearing manual node positions and reflowing the graph.
 - Provide an icon button to export the graph as a `.drawio` graph.
 - Provide an icon button to export the graph as a single page of interactive HTML.
 - Provide an icon button to print the current graph.

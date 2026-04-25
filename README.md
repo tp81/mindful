@@ -41,4 +41,5 @@ To publish:
 - Drop a file on a node to create a helpful placeholder explaining how to attach the file by link.
 - Use the `-` / `+` control beside parent nodes to collapse or expand branches.
 - Drag empty background to pan the workspace. Scrollbars appear when the graph extends beyond the viewport.
-- Use the toolbar to export `.drawio`, export a single-page interactive HTML file, or print.
+- Use the toolbar to fix layout, export `.drawio`, export a single-page interactive HTML file, or print.
+- Use the trash button beside a map in the sidebar to permanently delete it after confirmation.

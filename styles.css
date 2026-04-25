@@ -112,11 +112,29 @@ body {
 
 .map-list-item {
   width: 100%;
-  min-height: 38px;
+  min-height: 40px;
   margin: 1px 0;
-  padding: 8px 10px;
+  padding: 4px;
   border: 1px solid transparent;
   border-radius: 8px;
+  background: transparent;
+}
+
+.map-list-item-row {
+  width: 100%;
+  min-width: 0;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 30px;
+  align-items: center;
+  gap: 4px;
+}
+
+.map-select-button {
+  min-width: 0;
+  min-height: 30px;
+  padding: 7px 8px;
+  border: 0;
+  border-radius: 6px;
   background: transparent;
   color: #263238;
   font-family: "Trebuchet MS", Arial, sans-serif;
@@ -129,6 +147,22 @@ body {
   white-space: nowrap;
 }
 
+.map-delete-button {
+  width: 30px;
+  height: 30px;
+  border: 0;
+  border-radius: 6px;
+  background: transparent;
+  color: rgba(38, 50, 56, 0.56);
+  font-family: "Trebuchet MS", Arial, sans-serif;
+  font-size: 16px;
+  line-height: 1;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+}
+
 .map-list-item:hover,
 .map-list-item:focus-visible {
   background: #f0f5f5;
@@ -138,7 +172,23 @@ body {
 .map-list-item.active {
   background: #e4eeee;
   border-color: rgba(38, 50, 56, 0.16);
+}
+
+.map-list-item.active .map-select-button {
   font-weight: 700;
+}
+
+.map-select-button:hover,
+.map-select-button:focus-visible,
+.map-delete-button:hover,
+.map-delete-button:focus-visible {
+  background: rgba(255, 255, 255, 0.56);
+  outline: 0;
+}
+
+.map-delete-button:hover,
+.map-delete-button:focus-visible {
+  color: #b42318;
 }
 
 #aboutApp {

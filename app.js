@@ -30,6 +30,7 @@
   const newMapButton = document.getElementById("newMapButton");
   const sidebarToggle = document.getElementById("sidebarToggle");
   const sidebarOpen = document.getElementById("sidebarOpen");
+  const fixLayoutButton = document.getElementById("fixLayout");
   const exportDrawioButton = document.getElementById("exportDrawio");
   const exportHtmlButton = document.getElementById("exportHtml");
   const printMapButton = document.getElementById("printMap");
@@ -43,6 +44,7 @@
   newMapButton.addEventListener("click", createMap);
   sidebarToggle.addEventListener("click", () => setSidebarCollapsed(true));
   sidebarOpen.addEventListener("click", () => setSidebarCollapsed(false));
+  fixLayoutButton.addEventListener("click", fixLayout);
   exportDrawioButton.addEventListener("click", exportDrawio);
   exportHtmlButton.addEventListener("click", exportInteractiveHtml);
   printMapButton.addEventListener("click", printCurrentMap);
@@ -98,6 +100,32 @@
   function switchMap(id) {
     if (!library.maps[id] || id === library.activeMapId) return;
     library.activeMapId = id;
+    selectedId = currentMap().rootId;
+    colorIndex = countNodes() % PASTELS.length;
+    layoutTree();
+    render();
+    saveLibrary();
+    requestAnimationFrame(() => selectNode(selectedId, true));
+  }
+
+  function deleteMap(id) {
+    const map = library.maps[id];
+    if (!map) return;
+    const confirmed = window.confirm(`Delete "${map.title || "Untitled map"}"? This cannot be undone.`);
+    if (!confirmed) return;
+
+    delete library.maps[id];
+    library.order = library.order.filter((entryId) => entryId !== id);
+
+    if (!library.order.length) {
+      const replacement = createInitialMap("Mind map");
+      library.maps[replacement.id] = replacement;
+      library.order = [replacement.id];
+      library.activeMapId = replacement.id;
+    } else if (library.activeMapId === id) {
+      library.activeMapId = library.order[0];
+    }
+
     selectedId = currentMap().rootId;
     colorIndex = countNodes() % PASTELS.length;
     layoutTree();
@@ -471,13 +499,33 @@
     mapList.replaceChildren();
     library.order.forEach((id) => {
       const map = library.maps[id];
-      const button = document.createElement("button");
-      button.type = "button";
-      button.className = `map-list-item${id === library.activeMapId ? " active" : ""}`;
-      button.textContent = map.title || "Untitled map";
-      button.title = map.title || "Untitled map";
-      button.addEventListener("click", () => switchMap(id));
-      mapList.appendChild(button);
+      const item = document.createElement("div");
+      item.className = `map-list-item${id === library.activeMapId ? " active" : ""}`;
+
+      const row = document.createElement("div");
+      row.className = "map-list-item-row";
+
+      const selectButton = document.createElement("button");
+      selectButton.type = "button";
+      selectButton.className = "map-select-button";
+      selectButton.textContent = map.title || "Untitled map";
+      selectButton.title = map.title || "Untitled map";
+      selectButton.addEventListener("click", () => switchMap(id));
+
+      const deleteButton = document.createElement("button");
+      deleteButton.type = "button";
+      deleteButton.className = "map-delete-button";
+      deleteButton.title = "Delete map";
+      deleteButton.setAttribute("aria-label", `Delete ${map.title || "Untitled map"}`);
+      deleteButton.innerHTML = '<span aria-hidden="true">🗑</span>';
+      deleteButton.addEventListener("click", (event) => {
+        event.stopPropagation();
+        deleteMap(id);
+      });
+
+      row.append(selectButton, deleteButton);
+      item.appendChild(row);
+      mapList.appendChild(item);
     });
   }
 
@@ -666,6 +714,17 @@
       layoutTree();
       renderCanvas();
     });
+  }
+
+  function fixLayout() {
+    const map = currentMap();
+    Object.values(map.nodes).forEach((node) => {
+      node.manual = false;
+    });
+    layoutTree();
+    renderCanvas();
+    selectNode(selectedId, false);
+    saveLibrary();
   }
 
   function toggleBranch(id) {
