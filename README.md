@@ -36,6 +36,7 @@ To publish:
 - Arrow keys: navigate to parent, siblings, and first child when the caret is at a natural editing boundary.
 - `Delete`: delete the selected non-root node when its text is empty.
 - Drag nodes to move them manually.
+- Double-click a node to edit its text.
 - Drop a link on a node to create a child linked to that page.
 - Drop an image on a node to create an image child under the selected node.
 - Drop a file on a node to create a helpful placeholder explaining how to attach the file by link.

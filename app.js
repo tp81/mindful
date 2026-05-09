@@ -546,7 +546,7 @@
       const node = map.nodes[id];
       const element = document.createElement("div");
       element.className = `node${node.id === selectedId ? " selected" : ""}`;
-      element.contentEditable = "true";
+      element.contentEditable = "false";
       element.spellcheck = false;
       element.dataset.id = node.id;
       element.style.left = `${node.x}px`;
@@ -574,8 +574,13 @@
       } else {
         element.textContent = node.text;
       }
-      element.addEventListener("focus", () => selectNode(node.id, true));
-      element.addEventListener("click", () => selectNode(node.id, true));
+      element.tabIndex = 0;
+      element.addEventListener("focus", () => selectNode(node.id, false));
+      element.addEventListener("blur", () => {
+        if (!element.classList.contains("image-node")) element.contentEditable = "false";
+      });
+      element.addEventListener("click", () => selectNode(node.id, false));
+      element.addEventListener("dblclick", () => enterEditMode(node.id));
       element.addEventListener("input", () => {
         currentMap().nodes[node.id].text = element.textContent.trim();
         if (currentMap().nodes[node.id].url && element.textContent.trim() !== node.text) {
@@ -633,6 +638,7 @@
     document.querySelectorAll(".node").forEach((node) => node.classList.toggle("selected", node.dataset.id === id));
     const element = document.querySelector(`.node[data-id="${CSS.escape(id)}"]`);
     if (!element) return;
+    element.contentEditable = "false";
     element.focus({ preventScroll: true });
     if (selectText) {
       const range = document.createRange();
@@ -641,6 +647,19 @@
       selection.removeAllRanges();
       selection.addRange(range);
     }
+  }
+
+  function enterEditMode(id) {
+    const element = document.querySelector(`.node[data-id="${CSS.escape(id)}"]`);
+    if (!element || element.classList.contains("image-node")) return;
+    selectedId = id;
+    element.contentEditable = "true";
+    element.focus({ preventScroll: true });
+    const range = document.createRange();
+    range.selectNodeContents(element);
+    const selection = window.getSelection();
+    selection.removeAllRanges();
+    selection.addRange(range);
   }
 
   function startDrag(event, id) {

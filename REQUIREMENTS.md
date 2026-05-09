@@ -53,8 +53,8 @@ Create a client-side JavaScript mind mapping app named Mindful that stores map d
 ## Editing
 
 - Clicking a node selects it.
-- Clicking a node allows the user to edit its text.
-- Clicking or entering a node selects all of its text for quick replacement.
+- Double-clicking a node allows the user to edit its text.
+- Entering edit mode selects all of the node text for quick replacement.
 - Text editing should feel direct and inline.
 - Readability is more important than decorative style.
 - Use a readable chalkboard-like or cursive-style font.
