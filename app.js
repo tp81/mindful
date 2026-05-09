@@ -78,7 +78,7 @@
   render();
   requestAnimationFrame(() => {
     centerInitialView();
-    selectNode(selectedId, true);
+    selectNode(selectedId, { selectText: true, focus: true });
   });
 
   function createMap() {
@@ -105,7 +105,7 @@
     layoutTree();
     render();
     saveLibrary();
-    requestAnimationFrame(() => selectNode(selectedId, true));
+    requestAnimationFrame(() => selectNode(selectedId, { selectText: true, focus: true }));
   }
 
   function deleteMap(id) {
@@ -131,7 +131,7 @@
     layoutTree();
     render();
     saveLibrary();
-    requestAnimationFrame(() => selectNode(selectedId, true));
+    requestAnimationFrame(() => selectNode(selectedId, { selectText: true, focus: true }));
   }
 
   function createInitialMap(title) {
@@ -257,7 +257,7 @@
     if (!targetId || !shouldNavigateFromCaret(event.key)) return false;
 
     event.preventDefault();
-    selectNode(targetId, true);
+    selectNode(targetId, { selectText: true, focus: true });
     return true;
   }
 
@@ -345,7 +345,7 @@
     map.nodes[node.id] = node;
     layoutTree();
     renderCanvas();
-    selectNode(node.id, true);
+    selectNode(node.id, { selectText: true, focus: true });
     saveLibrary();
   }
 
@@ -359,7 +359,7 @@
     map.nodes[node.id] = node;
     layoutTree();
     renderCanvas();
-    selectNode(node.id, true);
+    selectNode(node.id, { selectText: true, focus: true });
     saveLibrary();
   }
 
@@ -392,7 +392,7 @@
     collectDescendants(id).forEach((nodeId) => delete map.nodes[nodeId]);
     layoutTree();
     renderCanvas();
-    selectNode(nextSelection, false);
+    selectNode(nextSelection);
     saveLibrary();
   }
 
@@ -575,11 +575,14 @@
         element.textContent = node.text;
       }
       element.tabIndex = 0;
-      element.addEventListener("focus", () => selectNode(node.id, false));
+      element.addEventListener("focus", () => {
+        selectedId = node.id;
+        updateSelectedClasses();
+      });
       element.addEventListener("blur", () => {
         if (!element.classList.contains("image-node")) element.contentEditable = "false";
       });
-      element.addEventListener("click", () => selectNode(node.id, false));
+      element.addEventListener("click", () => selectNode(node.id));
       element.addEventListener("dblclick", () => enterEditMode(node.id));
       element.addEventListener("input", () => {
         currentMap().nodes[node.id].text = element.textContent.trim();
@@ -633,13 +636,16 @@
     links.appendChild(path);
   }
 
-  function selectNode(id, selectText) {
+  function selectNode(id, options = {}) {
+    const { selectText = false, focus = false } = options;
     selectedId = id;
-    document.querySelectorAll(".node").forEach((node) => node.classList.toggle("selected", node.dataset.id === id));
+    updateSelectedClasses();
     const element = document.querySelector(`.node[data-id="${CSS.escape(id)}"]`);
     if (!element) return;
     element.contentEditable = "false";
-    element.focus({ preventScroll: true });
+    if (focus) {
+      element.focus({ preventScroll: true });
+    }
     if (selectText) {
       const range = document.createRange();
       range.selectNodeContents(element);
@@ -649,10 +655,15 @@
     }
   }
 
+  function updateSelectedClasses() {
+    document.querySelectorAll(".node").forEach((node) => node.classList.toggle("selected", node.dataset.id === selectedId));
+  }
+
   function enterEditMode(id) {
     const element = document.querySelector(`.node[data-id="${CSS.escape(id)}"]`);
     if (!element || element.classList.contains("image-node")) return;
     selectedId = id;
+    updateSelectedClasses();
     element.contentEditable = "true";
     element.focus({ preventScroll: true });
     const range = document.createRange();
@@ -668,7 +679,7 @@
     if (event.currentTarget.setPointerCapture) {
       event.currentTarget.setPointerCapture(event.pointerId);
     }
-    selectNode(id, false);
+    selectNode(id);
     drag = {
       id,
       pointerId: event.pointerId,
@@ -703,7 +714,7 @@
     node.x = clamp(drag.nodeX + dx, 70, Math.max(70, board.clientWidth - 70));
     node.y = clamp(drag.nodeY + dy, 35, Math.max(35, board.clientHeight - 35));
     renderCanvas();
-    selectNode(drag.id, false);
+    updateSelectedClasses();
   }
 
   function stopPointerActions() {
@@ -742,7 +753,7 @@
     });
     layoutTree();
     renderCanvas();
-    selectNode(selectedId, false);
+    selectNode(selectedId);
     saveLibrary();
   }
 
@@ -753,7 +764,7 @@
     if (node.collapsed && !getVisibleNodeIds().includes(selectedId)) selectedId = id;
     layoutTree();
     renderCanvas();
-    selectNode(selectedId, false);
+    selectNode(selectedId);
     saveLibrary();
   }
 
@@ -772,7 +783,7 @@
     if (!hasDroppableData(event)) return;
     event.preventDefault();
     clearDropTargets();
-    selectNode(id, false);
+    selectNode(id);
     event.currentTarget.classList.add("drop-target");
   }
 
@@ -817,14 +828,14 @@
     currentMap().nodes[node.id] = node;
     layoutTree();
     renderCanvas();
-    selectNode(node.id, false);
+    selectNode(node.id);
     saveLibrary();
 
     const title = await fetchPageTitle(url);
     if (title && currentMap().nodes[node.id]) {
       currentMap().nodes[node.id].text = title;
       renderCanvas();
-      selectNode(node.id, false);
+      selectNode(node.id);
       saveLibrary();
     }
   }
@@ -837,7 +848,7 @@
     currentMap().nodes[node.id] = node;
     layoutTree();
     renderCanvas();
-    selectNode(node.id, false);
+    selectNode(node.id);
     saveLibrary();
   }
 
@@ -854,7 +865,7 @@
       currentMap().nodes[node.id] = node;
       layoutTree();
       renderCanvas();
-      selectNode(node.id, false);
+      selectNode(node.id);
       saveLibrary();
     });
     reader.readAsDataURL(file);
